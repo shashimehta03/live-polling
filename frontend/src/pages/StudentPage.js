@@ -7,6 +7,7 @@ export default function StudentPage() {
   const [poll, setPoll] = useState(null);
   const [selected, setSelected] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [responses, setResponses] = useState([]);
 
   useEffect(() => {
     const existingName = sessionStorage.getItem('studentName');
@@ -21,10 +22,16 @@ export default function StudentPage() {
       setPoll(pollData);
       setSelected('');
       setSubmitted(false);
+      setResponses([]);
+    });
+
+    socket.on('poll-results', (data) => {
+      setResponses(data);
     });
 
     return () => {
       socket.off('new-poll');
+      socket.off('poll-results');
     };
   }, []);
 
@@ -40,6 +47,44 @@ export default function StudentPage() {
       setStored(true);
       socket.emit('register-student');
     }
+  };
+
+  const getSummary = () => {
+    const summary = {};
+    poll?.options.forEach(opt => summary[opt] = 0);
+    responses.forEach(res => {
+      if (summary[res.answer] !== undefined) {
+        summary[res.answer]++;
+      }
+    });
+    return summary;
+  };
+
+  const renderBarChart = () => {
+    const summary = getSummary();
+    const maxVotes = Math.max(...Object.values(summary), 1);
+
+    return (
+      <div style={{ marginTop: '20px', textAlign: 'left', width: '60%', marginInline: 'auto' }}>
+        <h4>Live Poll Results</h4>
+        {Object.entries(summary).map(([opt, count]) => {
+          const barWidth = (count / maxVotes) * 100;
+          return (
+            <div key={opt} style={{ marginBottom: '8px' }}>
+              <strong>{opt} - {count}</strong>
+              <div style={{
+                height: '20px',
+                backgroundColor: '#4CAF50',
+                width: `${barWidth}%`,
+                maxWidth: '100%',
+                transition: 'width 0.3s ease',
+                borderRadius: '4px'
+              }} />
+            </div>
+          );
+        })}
+      </div>
+    );
   };
 
   return (
@@ -77,7 +122,10 @@ export default function StudentPage() {
                 <button onClick={handleSubmit} disabled={!selected}>Submit Answer</button>
               </div>
             ) : (
-              <p>✅ You have submitted your answer!</p>
+              <>
+                <p>✅ You have submitted your answer!</p>
+                {renderBarChart()}
+              </>
             )
           ) : (
             <p>No active poll yet.</p>
