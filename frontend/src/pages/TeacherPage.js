@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { socket } from '../socket';
 
 export default function TeacherPage() {
   const [question, setQuestion] = useState('');
@@ -30,8 +31,13 @@ export default function TeacherPage() {
       return;
     }
 
-    console.log('Poll created:', { question, options: trimmedOptions });
-    alert('Poll created (mock only for now)');
+    const poll = {
+      question: question.trim(),
+      options: trimmedOptions,
+    };
+
+    socket.emit('create-poll', poll);
+    alert('Poll sent to students!');
     setQuestion('');
     setOptions(['']);
   };
@@ -39,14 +45,12 @@ export default function TeacherPage() {
   return (
     <div style={{ textAlign: 'center' }}>
       <h2>Teacher Panel</h2>
-
       <input
         value={question}
         onChange={e => setQuestion(e.target.value)}
         placeholder="Enter your poll question"
         style={{ width: '60%', padding: '8px', marginBottom: '20px' }}
       />
-
       <div style={{ textAlign: 'left', margin: 'auto', width: '60%' }}>
         <h4>Options (max 5):</h4>
         <ul style={{ listStyleType: 'disc' }}>
