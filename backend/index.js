@@ -14,6 +14,7 @@ const io = new Server(server, {
 });
 
 let currentPoll = null;
+let answers = [];
 
 io.on('connection', (socket) => {
   console.log('New client connected:', socket.id);
@@ -29,7 +30,18 @@ io.on('connection', (socket) => {
   socket.on('create-poll', (pollData) => {
     currentPoll = pollData;
     console.log('Poll created:', currentPoll);
+    answers = [];
     io.emit('new-poll', currentPoll);
+  });
+
+  // Student submits answer
+  socket.on('submit-answer', ({ name, answer }) => {
+    if (!currentPoll) return;
+    const alreadyAnswered = answers.find((a) => a.name === name);
+    if (alreadyAnswered) return;
+
+    answers.push({ name, answer });
+    io.emit('poll-results', answers);
   });
 
   socket.on('disconnect', () => {

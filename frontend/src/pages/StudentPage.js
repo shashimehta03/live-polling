@@ -5,6 +5,8 @@ export default function StudentPage() {
   const [name, setName] = useState('');
   const [stored, setStored] = useState(false);
   const [poll, setPoll] = useState(null);
+  const [selected, setSelected] = useState('');
+  const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
     const existingName = sessionStorage.getItem('studentName');
@@ -17,6 +19,8 @@ export default function StudentPage() {
     socket.on('new-poll', (pollData) => {
       console.log('Received poll:', pollData);
       setPoll(pollData);
+      setSelected('');
+      setSubmitted(false);
     });
 
     return () => {
@@ -25,6 +29,12 @@ export default function StudentPage() {
   }, []);
 
   const handleSubmit = () => {
+    if (!selected) return;
+    socket.emit('submit-answer', { name, answer: selected });
+    setSubmitted(true);
+  };
+
+  const handleNameSubmit = () => {
     if (name) {
       sessionStorage.setItem('studentName', name);
       setStored(true);
@@ -43,20 +53,32 @@ export default function StudentPage() {
             placeholder="Your name"
           />
           <br /><br />
-          <button onClick={handleSubmit} disabled={!name}>Submit</button>
+          <button onClick={handleNameSubmit} disabled={!name}>Submit</button>
         </>
       ) : (
         <>
           <h3>Welcome, {name} 👋</h3>
           {poll ? (
-            <div>
-              <h4>{poll.question}</h4>
-              <ul style={{ listStyleType: 'circle', paddingLeft: 0 }}>
+            !submitted ? (
+              <div>
+                <h4>{poll.question}</h4>
                 {poll.options.map((opt, idx) => (
-                  <li key={idx}>{opt}</li>
+                  <div key={idx}>
+                    <input
+                      type="radio"
+                      name="option"
+                      value={opt}
+                      checked={selected === opt}
+                      onChange={() => setSelected(opt)}
+                    />
+                    <label>{opt}</label>
+                  </div>
                 ))}
-              </ul>
-            </div>
+                <button onClick={handleSubmit} disabled={!selected}>Submit Answer</button>
+              </div>
+            ) : (
+              <p>✅ You have submitted your answer!</p>
+            )
           ) : (
             <p>No active poll yet.</p>
           )}
