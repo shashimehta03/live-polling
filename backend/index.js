@@ -15,12 +15,15 @@ const io = new Server(server, {
 
 let currentPoll = null;
 let answers = [];
+let connectedStudents = new Map(); // Using Map to store socket.id -> student name
 
 io.on('connection', (socket) => {
   console.log('New client connected:', socket.id);
 
   // Send current poll to new student
-  socket.on('register-student', () => {
+  socket.on('register-student', (name) => {
+    connectedStudents.set(socket.id, name);
+    updateStudentCount();
     if (currentPoll) {
       socket.emit('new-poll', currentPoll);
     }
@@ -40,6 +43,12 @@ io.on('connection', (socket) => {
     console.log('Poll created:', currentPoll);
     answers = [];
     io.emit('new-poll', currentPoll);
+    updateStudentCount();
+  });
+
+  // Teacher requests student count
+  socket.on('get-student-count', () => {
+    updateStudentCount();
   });
 
   // Student submits answer
@@ -50,7 +59,13 @@ io.on('connection', (socket) => {
 
     answers.push({ name, answer });
     io.emit('poll-results', answers);
+    
+    // Check if all students have answered
+    if (answers.length >= connectedStudents.size && connectedStudents.size > 0) {
+      io.emit('poll-completed');
+    }
   });
+
   // When a student wants the current poll again after refresh
   socket.on('get-current-poll', () => {
     if (currentPoll) {
@@ -65,7 +80,14 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id);
+    connectedStudents.delete(socket.id);
+    updateStudentCount();
   });
+
+  // Helper function to update student count
+  function updateStudentCount() {
+    io.emit('student-count', connectedStudents.size);
+  }
 });
 
 server.listen(5000, () => {

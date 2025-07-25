@@ -7,24 +7,56 @@ export default function TeacherPage() {
   const [poll, setPoll] = useState(null);
   const [responses, setResponses] = useState([]);
   const [showMore, setShowMore] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(60);
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [totalStudents, setTotalStudents] = useState(0);
 
   const maxOptions = 5;
 
   useEffect(() => {
     socket.on('poll-results', (data) => {
       setResponses(data);
+      // Check if all students have answered
+      if (data.length >= totalStudents && totalStudents > 0) {
+        clearTimer();
+      }
     });
 
     socket.on('new-poll', (pollData) => {
       setPoll(pollData);
       setResponses([]);
+      setTimeLeft(60);
+      setIsTimerRunning(true);
     });
+
+    socket.on('student-count', (count) => {
+      setTotalStudents(count);
+    });
+
+    // Request student count when component mounts
+    socket.emit('get-student-count');
 
     return () => {
       socket.off('poll-results');
       socket.off('new-poll');
+      socket.off('student-count');
     };
-  }, []);
+  }, [totalStudents]);
+
+  useEffect(() => {
+    let timer;
+    if (isTimerRunning && timeLeft > 0) {
+      timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+    } else if (timeLeft === 0 && isTimerRunning) {
+      setIsTimerRunning(false);
+    }
+    return () => clearTimeout(timer);
+  }, [timeLeft, isTimerRunning]);
+
+  const clearTimer = () => {
+    setIsTimerRunning(false);
+    setTimeLeft(60);
+  };
 
   const handleOptionChange = (index, value) => {
     const newOptions = [...options];
@@ -61,6 +93,7 @@ export default function TeacherPage() {
     setOptions(['']);
     setPoll(poll);
     setResponses([]);
+    socket.emit('get-student-count');
   };
 
   const getSummary = () => {
@@ -78,7 +111,7 @@ export default function TeacherPage() {
     <div style={{ textAlign: 'center' }}>
       <h2>Teacher Panel</h2>
 
-      {!poll ? (
+      {!poll || !isTimerRunning ? (
         <>
           <input
             value={question}
@@ -115,6 +148,8 @@ export default function TeacherPage() {
       ) : (
         <>
           <h3>📢 Current Poll: {poll.question}</h3>
+          <p>Time left: {timeLeft} seconds</p>
+          <p>Students answered: {responses.length}/{totalStudents}</p>
           <ul>
             {Object.entries(getSummary()).map(([opt, count]) => (
               <li key={opt}>{opt}: {count}</li>
