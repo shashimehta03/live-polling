@@ -26,6 +26,14 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Send current poll + results if available on teacher refresh
+  if (currentPoll) {
+    socket.emit('new-poll', currentPoll);
+    if (answers.length > 0) {
+      socket.emit('poll-results', answers);
+    }
+  }
+
   // Teacher creates poll
   socket.on('create-poll', (pollData) => {
     currentPoll = pollData;

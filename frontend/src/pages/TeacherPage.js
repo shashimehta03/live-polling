@@ -143,6 +143,28 @@ export default function TeacherPage() {
                   ))}
                 </tbody>
               </table>
+              {/* Bar chart */}
+              <div style={{ marginTop: '30px', width: '80%', marginInline: 'auto' }}>
+                <h4>Live Poll Bar Chart</h4>
+                {Object.entries(getSummary()).map(([option, count]) => {
+                  const maxVotes = Math.max(...Object.values(getSummary()), 1);
+                  const widthPercent = (count / maxVotes) * 100;
+
+                  return (
+                    <div key={option} style={{ marginBottom: '12px' }}>
+                      <strong>{option} - {count}</strong>
+                      <div style={{
+                        height: '20px',
+                        backgroundColor: '#4CAF50',
+                        width: `${widthPercent}%`,
+                        transition: 'width 0.4s ease',
+                        borderRadius: '5px',
+                        marginTop: '4px'
+                      }} />
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
         </>
