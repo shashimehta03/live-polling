@@ -1,5 +1,3 @@
 
 chat 
 remove 
-if all joinned answer then open the option to create new poll
-else show still this left with name

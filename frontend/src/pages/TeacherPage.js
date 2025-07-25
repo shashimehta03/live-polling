@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { socket } from '../socket';
+import '../styles/TeacherPage.css';
 
 export default function TeacherPage() {
   const [question, setQuestion] = useState('');
@@ -117,120 +118,110 @@ export default function TeacherPage() {
   };
 
   return (
-    <div style={{ textAlign: 'center' }}>
-      <h2>Teacher Panel</h2>
+    <div className="teacher-container">
+      <h2 className="teacher-title">Teacher Panel</h2>
 
       {!poll ? (
-        <>
+        <div className="teacher-create-form">
           <input
             value={question}
             onChange={e => setQuestion(e.target.value)}
             placeholder="Enter your poll question"
-            style={{ width: '60%', padding: '8px', marginBottom: '20px' }}
+            className="teacher-question-input"
           />
-          <div style={{ textAlign: 'left', margin: 'auto', width: '60%' }}>
+          <div className="teacher-options-section">
             <h4>Options (max 5):</h4>
-            <ul style={{ listStyleType: 'disc' }}>
+            <ul className="teacher-options-list">
               {options.map((opt, index) => (
-                <li key={index}>
+                <li key={index} className="teacher-option-item">
                   <input
                     value={opt}
                     onChange={(e) => handleOptionChange(index, e.target.value)}
                     placeholder={`Option ${index + 1}`}
-                    style={{ marginBottom: '8px', width: '80%' }}
+                    className="teacher-option-input"
                   />
                   {options.length > 1 && (
-                    <button onClick={() => handleRemoveOption(index)}>❌</button>
+                    <button className="teacher-remove-option-btn" onClick={() => handleRemoveOption(index)}>
+                      ❌
+                    </button>
                   )}
                 </li>
               ))}
             </ul>
             {options.length < maxOptions && (
-              <button onClick={handleAddOption}>➕ Add Option</button>
+              <button className="teacher-add-option-btn" onClick={handleAddOption}>
+                ➕ Add Option
+              </button>
             )}
           </div>
           <br />
-          <button onClick={handleCreatePoll} style={{ padding: '10px 20px' }}>
+          <button className="teacher-create-btn" onClick={handleCreatePoll}>
             Create Poll
           </button>
-        </>
+        </div>
       ) : (
-        <>
-          <h3>📢 Current Poll: {poll.question}</h3>
+        <div className="teacher-poll-section">
+          <h3 className="teacher-current-poll-title">📢 Current Poll: {poll.question}</h3>
           <p>Time left: {timeLeft} seconds</p>
           <p>Students answered: {responses.length}/{totalStudents}</p>
-          <ul>
+          <ul className="teacher-summary-list">
             {Object.entries(getSummary()).map(([opt, count]) => (
               <li key={opt}>{opt}: {count}</li>
             ))}
           </ul>
-          
+
           {pollCompleted && (
-            <div style={{ margin: '20px 0' }}>
-              <button 
+            <div className="teacher-new-poll-btn-section">
+              <button
+                className="teacher-create-btn"
                 onClick={handleNewPoll}
-                style={{ 
-                  padding: '10px 20px',
-                  backgroundColor: '#4CAF50',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
               >
                 Create New Poll
               </button>
             </div>
           )}
-          
-          <button onClick={() => setShowMore(prev => !prev)}>
+
+          <button className="teacher-view-details-btn" onClick={() => setShowMore(prev => !prev)}>
             {showMore ? 'Hide Details' : 'View More'}
           </button>
 
           {showMore && (
-            <div style={{ marginTop: '10px' }}>
+            <div className="teacher-details-section">
               <h4>Student Answers</h4>
-              <table style={{ margin: 'auto', borderCollapse: 'collapse' }}>
+              <table className="teacher-answers-table">
                 <thead>
                   <tr>
-                    <th style={{ border: '1px solid black', padding: '5px' }}>Name</th>
-                    <th style={{ border: '1px solid black', padding: '5px' }}>Answer</th>
+                    <th>Name</th>
+                    <th>Answer</th>
                   </tr>
                 </thead>
                 <tbody>
                   {responses.map((res, idx) => (
                     <tr key={idx}>
-                      <td style={{ border: '1px solid black', padding: '5px' }}>{res.name}</td>
-                      <td style={{ border: '1px solid black', padding: '5px' }}>{res.answer}</td>
+                      <td>{res.name}</td>
+                      <td>{res.answer}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
               {/* Bar chart */}
-              <div style={{ marginTop: '30px', width: '80%', marginInline: 'auto' }}>
+              <div className="teacher-bar-chart-section">
                 <h4>Live Poll Bar Chart</h4>
                 {Object.entries(getSummary()).map(([option, count]) => {
                   const maxVotes = Math.max(...Object.values(getSummary()), 1);
                   const widthPercent = (count / maxVotes) * 100;
 
                   return (
-                    <div key={option} style={{ marginBottom: '12px' }}>
+                    <div key={option} className="teacher-bar-chart-row">
                       <strong>{option} - {count}</strong>
-                      <div style={{
-                        height: '20px',
-                        backgroundColor: '#4CAF50',
-                        width: `${widthPercent}%`,
-                        transition: 'width 0.4s ease',
-                        borderRadius: '5px',
-                        marginTop: '4px'
-                      }} />
+                      <div className="teacher-bar-chart-bar" style={{ width: `${widthPercent}%` }} />
                     </div>
                   );
                 })}
               </div>
             </div>
           )}
-        </>
+        </div>
       )}
     </div>
   );

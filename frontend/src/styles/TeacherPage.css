@@ -1,0 +1,167 @@
+.teacher-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f8fafc 0%, #fef9c3 100%);
+}
+
+.teacher-title {
+    font-size: 2.3rem;
+    margin-top: 2.5rem;
+    color: #b45309;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.teacher-create-form,
+.teacher-poll-section {
+    background: #fff;
+    padding: 2.5rem 2rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.07);
+    min-width: 340px;
+    margin-top: 2rem;
+}
+
+.teacher-question-input {
+    width: 80%;
+    padding: 0.8rem 1.2rem;
+    font-size: 1.1rem;
+    border: 1px solid #fbbf24;
+    border-radius: 8px;
+    margin-bottom: 1.2rem;
+}
+
+.teacher-options-section {
+    margin-top: 1.2rem;
+    margin-bottom: 1.2rem;
+}
+
+.teacher-options-list {
+    list-style-type: disc;
+    padding-left: 1.5rem;
+}
+
+.teacher-option-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.7rem;
+}
+
+.teacher-option-input {
+    margin-right: 0.7rem;
+    width: 70%;
+    padding: 0.5rem 0.8rem;
+    border: 1px solid #fbbf24;
+    border-radius: 6px;
+}
+
+.teacher-remove-option-btn {
+    background: none;
+    border: none;
+    color: #ef4444;
+    font-size: 1.2rem;
+    cursor: pointer;
+    margin-left: 0.5rem;
+}
+
+.teacher-add-option-btn {
+    margin-top: 0.7rem;
+    padding: 0.5rem 1.2rem;
+    background: #fde68a;
+    color: #b45309;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.teacher-add-option-btn:hover {
+    background: #fbbf24;
+}
+
+.teacher-create-btn {
+    margin-top: 1.5rem;
+    padding: 0.8rem 2.2rem;
+    font-size: 1.1rem;
+    border: none;
+    border-radius: 8px;
+    background: #fbbf24;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.teacher-create-btn:hover {
+    background: #b45309;
+    transform: translateY(-2px) scale(1.03);
+}
+
+.teacher-current-poll-title {
+    color: #b45309;
+    margin-bottom: 1.2rem;
+}
+
+.teacher-summary-list {
+    margin-top: 1.2rem;
+    margin-bottom: 1.2rem;
+}
+
+.teacher-new-poll-btn-section {
+    margin: 1.5rem 0;
+}
+
+.teacher-view-details-btn {
+    margin-top: 1.2rem;
+    padding: 0.5rem 1.2rem;
+    background: #fbbf24;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.teacher-view-details-btn:hover {
+    background: #b45309;
+}
+
+.teacher-details-section {
+    margin-top: 1.5rem;
+}
+
+.teacher-answers-table {
+    margin: auto;
+    border-collapse: collapse;
+    width: 90%;
+    margin-bottom: 2rem;
+}
+
+.teacher-answers-table th,
+.teacher-answers-table td {
+    border: 1px solid #fbbf24;
+    padding: 8px 12px;
+    text-align: center;
+}
+
+.teacher-bar-chart-section {
+    margin-top: 2rem;
+    width: 90%;
+    margin-inline: auto;
+}
+
+.teacher-bar-chart-row {
+    margin-bottom: 12px;
+}
+
+.teacher-bar-chart-bar {
+    height: 20px;
+    background-color: #fbbf24;
+    transition: width 0.4s ease;
+    border-radius: 5px;
+    margin-top: 4px;
+}

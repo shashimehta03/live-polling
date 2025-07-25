@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { socket } from '../socket';
+import '../styles/StudentPage.css';
 
 export default function StudentPage() {
   const [name, setName] = useState('');
@@ -101,49 +102,51 @@ export default function StudentPage() {
   };
 
   return (
-    <div style={{ textAlign: 'center' }}>
+    <div className="student-container">
       {!stored ? (
-        <>
+        <div className="student-name-form">
           <h3>Enter Your Name</h3>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Your name"
+            className="student-name-input"
           />
           <br /><br />
-          <button onClick={handleNameSubmit} disabled={!name}>Submit</button>
-        </>
+          <button className="student-submit-btn" onClick={handleNameSubmit} disabled={!name}>Submit</button>
+        </div>
       ) : (
-        <>
-          <h3>Welcome, {name} 👋</h3>
+        <div className="student-poll-section">
+          <h3>Welcome, {name} <span role="img" aria-label="wave">👋</span></h3>
           {poll ? (
             !submitted ? (
-              <div>
+              <div className="student-poll-form">
                 <h4>{poll.question}</h4>
                 {poll.options.map((opt, idx) => (
-                  <div key={idx}>
+                  <div key={idx} className="student-option-row">
                     <input
                       type="radio"
                       name="option"
                       value={opt}
                       checked={selected === opt}
                       onChange={() => setSelected(opt)}
+                      className="student-option-radio"
                     />
                     <label>{opt}</label>
                   </div>
                 ))}
-                <button onClick={handleSubmit} disabled={!selected}>Submit Answer</button>
+                <button className="student-submit-btn" onClick={handleSubmit} disabled={!selected}>Submit Answer</button>
               </div>
             ) : (
-              <>
+              <div className="student-submitted-section">
                 <p>✅ You have submitted your answer!</p>
                 {renderBarChart()}
-              </>
+              </div>
             )
           ) : (
             <p>No active poll yet.</p>
           )}
-        </>
+        </div>
       )}
     </div>
   );
