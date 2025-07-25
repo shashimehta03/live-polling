@@ -21,13 +21,25 @@ export default function StudentPage() {
       console.log('Received poll:', pollData);
       setPoll(pollData);
       setSelected('');
-      setSubmitted(false);
       setResponses([]);
+
+      const alreadyAnswered = sessionStorage.getItem(`answered-${pollData.question}`);
+      if (alreadyAnswered === 'true') {
+        setSubmitted(true);
+
+        // ✅ Request current results again
+        socket.emit('get-latest-results');
+      } else {
+        setSubmitted(false);
+      }
     });
 
     socket.on('poll-results', (data) => {
       setResponses(data);
     });
+
+    // ✅ Request current poll (in case socket missed initial event on reconnect)
+    socket.emit('get-current-poll');
 
     return () => {
       socket.off('new-poll');
@@ -38,6 +50,7 @@ export default function StudentPage() {
   const handleSubmit = () => {
     if (!selected) return;
     socket.emit('submit-answer', { name, answer: selected });
+    sessionStorage.setItem(`answered-${poll.question}`, 'true'); // ✅ Save answer
     setSubmitted(true);
   };
 

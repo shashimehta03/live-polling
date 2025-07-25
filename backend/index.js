@@ -51,6 +51,17 @@ io.on('connection', (socket) => {
     answers.push({ name, answer });
     io.emit('poll-results', answers);
   });
+  // When a student wants the current poll again after refresh
+  socket.on('get-current-poll', () => {
+    if (currentPoll) {
+      socket.emit('new-poll', currentPoll);
+    }
+  });
+
+  // When a student wants the latest poll results after refresh
+  socket.on('get-latest-results', () => {
+    socket.emit('poll-results', answers);
+  });
 
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id);
