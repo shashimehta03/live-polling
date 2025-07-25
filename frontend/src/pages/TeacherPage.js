@@ -10,6 +10,7 @@ export default function TeacherPage() {
   const [timeLeft, setTimeLeft] = useState(60);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [totalStudents, setTotalStudents] = useState(0);
+  const [pollCompleted, setPollCompleted] = useState(false);
 
   const maxOptions = 5;
 
@@ -18,6 +19,7 @@ export default function TeacherPage() {
       setResponses(data);
       // Check if all students have answered
       if (data.length >= totalStudents && totalStudents > 0) {
+        setPollCompleted(true);
         clearTimer();
       }
     });
@@ -27,6 +29,7 @@ export default function TeacherPage() {
       setResponses([]);
       setTimeLeft(60);
       setIsTimerRunning(true);
+      setPollCompleted(false);
     });
 
     socket.on('student-count', (count) => {
@@ -49,6 +52,7 @@ export default function TeacherPage() {
       timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
     } else if (timeLeft === 0 && isTimerRunning) {
       setIsTimerRunning(false);
+      setPollCompleted(true);
     }
     return () => clearTimeout(timer);
   }, [timeLeft, isTimerRunning]);
@@ -96,6 +100,11 @@ export default function TeacherPage() {
     socket.emit('get-student-count');
   };
 
+  const handleNewPoll = () => {
+    setPoll(null);
+    setPollCompleted(false);
+  };
+
   const getSummary = () => {
     const summary = {};
     poll?.options.forEach(opt => summary[opt] = 0);
@@ -111,7 +120,7 @@ export default function TeacherPage() {
     <div style={{ textAlign: 'center' }}>
       <h2>Teacher Panel</h2>
 
-      {!poll || !isTimerRunning ? (
+      {!poll ? (
         <>
           <input
             value={question}
@@ -155,6 +164,25 @@ export default function TeacherPage() {
               <li key={opt}>{opt}: {count}</li>
             ))}
           </ul>
+          
+          {pollCompleted && (
+            <div style={{ margin: '20px 0' }}>
+              <button 
+                onClick={handleNewPoll}
+                style={{ 
+                  padding: '10px 20px',
+                  backgroundColor: '#4CAF50',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                Create New Poll
+              </button>
+            </div>
+          )}
+          
           <button onClick={() => setShowMore(prev => !prev)}>
             {showMore ? 'Hide Details' : 'View More'}
           </button>
