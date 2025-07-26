@@ -9,6 +9,7 @@ export default function StudentPage() {
   const [selected, setSelected] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [responses, setResponses] = useState([]);
+  const [isCorrect, setIsCorrect] = useState(null);
 
   useEffect(() => {
     const existingName = sessionStorage.getItem('studentName');
@@ -23,6 +24,7 @@ export default function StudentPage() {
       setPoll(pollData);
       setSelected('');
       setResponses([]);
+      setIsCorrect(null);
 
       const alreadyAnswered = sessionStorage.getItem(`answered-${pollData.question}`);
       if (alreadyAnswered === 'true') {
@@ -50,6 +52,8 @@ export default function StudentPage() {
 
   const handleSubmit = () => {
     if (!selected) return;
+    const correct = poll.correctAnswer === selected;
+    setIsCorrect(correct);
     socket.emit('submit-answer', { name, answer: selected });
     sessionStorage.setItem(`answered-${poll.question}`, 'true'); // ✅ Save answer
     setSubmitted(true);
@@ -139,7 +143,19 @@ export default function StudentPage() {
               </div>
             ) : (
               <div className="student-submitted-section">
-                <p>✅ You have submitted your answer!</p>
+                <div className={`student-feedback ${isCorrect ? 'correct' : 'incorrect'}`}>
+                  {isCorrect ? (
+                    <>
+                      <span className="feedback-icon">✅</span>
+                      <p>Correct! Well done!</p>
+                    </>
+                  ) : (
+                    <>
+                      <span className="feedback-icon">❌</span>
+                      <p>Incorrect. The correct answer was: <strong>{poll.correctAnswer}</strong></p>
+                    </>
+                  )}
+                </div>
                 {renderBarChart()}
               </div>
             )

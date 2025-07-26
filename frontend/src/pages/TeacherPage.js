@@ -6,6 +6,7 @@ import '../styles/TeacherPage.css';
 export default function TeacherPage() {
   const [question, setQuestion] = useState('');
   const [options, setOptions] = useState(['']);
+  const [correctAnswer, setCorrectAnswer] = useState('');
   const [poll, setPoll] = useState(null);
   const [responses, setResponses] = useState([]);
   const [showMore, setShowMore] = useState(false);
@@ -155,14 +156,21 @@ export default function TeacherPage() {
       return;
     }
 
+    if (!correctAnswer) {
+      alert('Please select a correct answer.');
+      return;
+    }
+
     const poll = {
       question: question.trim(),
       options: trimmedOptions,
+      correctAnswer: correctAnswer,
     };
 
     socket.emit('create-poll', poll);
     setQuestion('');
     setOptions(['']);
+    setCorrectAnswer('');
     setPoll(poll);
     setResponses([]);
     socket.emit('get-student-count');
@@ -171,6 +179,7 @@ export default function TeacherPage() {
   const handleNewPoll = () => {
     setPoll(null);
     setPollCompleted(false);
+    setCorrectAnswer('');
   };
 
   const getSummary = () => {
@@ -182,6 +191,12 @@ export default function TeacherPage() {
       }
     });
     return summary;
+  };
+
+  const getAnswerStats = () => {
+    const correct = responses.filter(res => res.isCorrect).length;
+    const incorrect = responses.filter(res => !res.isCorrect).length;
+    return { correct, incorrect };
   };
 
   return (
@@ -207,6 +222,15 @@ export default function TeacherPage() {
                     placeholder={`Option ${index + 1}`}
                     className="teacher-option-input"
                   />
+                  <input
+                    type="radio"
+                    name="correctAnswer"
+                    value={opt}
+                    checked={correctAnswer === opt}
+                    onChange={(e) => setCorrectAnswer(e.target.value)}
+                    className="teacher-correct-radio"
+                  />
+                  <label className="teacher-correct-label">Correct</label>
                   {options.length > 1 && (
                     <button className="teacher-remove-option-btn" onClick={() => handleRemoveOption(index)}>
                       ❌
@@ -236,6 +260,20 @@ export default function TeacherPage() {
             <canvas ref={chartRef} style={{ maxHeight: '300px', maxWidth: '100%' }} />
           </div>
 
+          <div className="teacher-answer-stats">
+            <h4>Answer Statistics</h4>
+            <div className="teacher-stats-grid">
+              <div className="teacher-stat-item correct">
+                <span className="teacher-stat-label">Correct Answers:</span>
+                <span className="teacher-stat-value">{getAnswerStats().correct}</span>
+              </div>
+              <div className="teacher-stat-item incorrect">
+                <span className="teacher-stat-label">Incorrect Answers:</span>
+                <span className="teacher-stat-value">{getAnswerStats().incorrect}</span>
+              </div>
+            </div>
+          </div>
+
           {pollCompleted && (
             <div className="teacher-new-poll-btn-section">
               <button
@@ -259,6 +297,7 @@ export default function TeacherPage() {
                   <tr>
                     <th>Name</th>
                     <th>Answer</th>
+                    <th>Result</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -266,6 +305,9 @@ export default function TeacherPage() {
                     <tr key={idx}>
                       <td>{res.name}</td>
                       <td>{res.answer}</td>
+                      <td className={res.isCorrect ? 'correct-answer' : 'incorrect-answer'}>
+                        {res.isCorrect ? '✅ Correct' : '❌ Incorrect'}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

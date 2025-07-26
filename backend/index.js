@@ -57,7 +57,10 @@ io.on('connection', (socket) => {
     const alreadyAnswered = answers.find((a) => a.name === name);
     if (alreadyAnswered) return;
 
-    answers.push({ name, answer });
+    // Check if answer is correct
+    const isCorrect = currentPoll.correctAnswer === answer;
+
+    answers.push({ name, answer, isCorrect });
     io.emit('poll-results', answers);
     
     // Check if all students have answered

@@ -165,3 +165,71 @@
     border-radius: 5px;
     margin-top: 4px;
 }
+
+.teacher-correct-radio {
+    margin-left: 0.5rem;
+    margin-right: 0.3rem;
+}
+
+.teacher-correct-label {
+    font-size: 0.9rem;
+    color: #b45309;
+    font-weight: 600;
+    margin-right: 0.5rem;
+}
+
+.teacher-answer-stats {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: #fef9c3;
+    border-radius: 12px;
+    border: 2px solid #fbbf24;
+}
+
+.teacher-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.teacher-stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.teacher-stat-item.correct {
+    background: #dcfce7;
+    color: #166534;
+    border: 2px solid #22c55e;
+}
+
+.teacher-stat-item.incorrect {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 2px solid #ef4444;
+}
+
+.teacher-stat-label {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.teacher-stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.correct-answer {
+    color: #166534;
+    font-weight: 600;
+}
+
+.incorrect-answer {
+    color: #991b1b;
+    font-weight: 600;
+}
