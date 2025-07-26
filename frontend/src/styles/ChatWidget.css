@@ -377,14 +377,9 @@
     transition: all 0.2s;
 }
 
-.remove-student-btn:hover:not(:disabled) {
+.remove-student-btn:hover {
     background: #fee2e2;
     transform: scale(1.1);
-}
-
-.remove-student-btn:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
 }
 
 /* Adjust chat window height for tabs */

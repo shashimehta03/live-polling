@@ -105,8 +105,14 @@ io.on('connection', (socket) => {
 
   // Remove student (teacher only)
   socket.on('remove-student', (studentSocketId) => {
+    console.log('Remove student request:', studentSocketId);
+    console.log('Connected teachers:', Array.from(connectedTeachers));
+    console.log('Current socket ID:', socket.id);
+
     if (connectedTeachers.has(socket.id)) {
       const studentData = allStudents.get(studentSocketId);
+      console.log('Student data found:', studentData);
+
       if (studentData) {
         // Remove student's answers from current poll
         answers = answers.filter(answer => answer.name !== studentData.name);
@@ -121,6 +127,7 @@ io.on('connection', (socket) => {
 
         // Disconnect the student if currently connected
         if (studentData.isConnected) {
+          console.log('Emitting removed-by-teacher to:', studentSocketId);
           io.to(studentSocketId).emit('removed-by-teacher');
         }
 
@@ -131,6 +138,8 @@ io.on('connection', (socket) => {
         // Update poll results
         io.emit('poll-results', answers);
       }
+    } else {
+      console.log('Teacher validation failed - socket not in connectedTeachers');
     }
   });
 

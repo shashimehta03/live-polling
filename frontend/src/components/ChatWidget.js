@@ -69,9 +69,7 @@ export default function ChatWidget({ userType, userName, userId }) {
     };
 
     const handleRemoveStudent = (studentSocketId, studentName) => {
-        if (window.confirm(`Are you sure you want to remove ${studentName} from the session?`)) {
-            socket.emit('remove-student', studentSocketId);
-        }
+        socket.emit('remove-student', studentSocketId);
     };
 
     const formatTime = (timestamp) => {
@@ -126,10 +124,10 @@ export default function ChatWidget({ userType, userName, userId }) {
     const renderParticipantsTab = () => (
         <div className="participants-container">
             <div className="participants-header">
-                <h4>Participants ({participants.length})</h4>
+                <h4>All Participants ({participants.length})</h4>
                 <div className="participants-stats">
                     <span className="connected-count">
-                        Connected: {participants.filter(p => p.isConnected).length}
+                        Online: {participants.filter(p => p.isConnected).length}
                     </span>
                 </div>
             </div>
@@ -158,7 +156,6 @@ export default function ChatWidget({ userType, userName, userId }) {
                                     className="remove-student-btn"
                                     onClick={() => handleRemoveStudent(participant.socketId, participant.name)}
                                     title={`Remove ${participant.name}`}
-                                    disabled={!participant.isConnected}
                                 >
                                     🗑️
                                 </button>

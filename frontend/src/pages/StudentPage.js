@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { socket } from '../socket';
 import ChatWidget from '../components/ChatWidget';
+import RemovalModal from '../components/RemovalModal';
 import '../styles/StudentPage.css';
 
 export default function StudentPage() {
@@ -11,6 +12,7 @@ export default function StudentPage() {
   const [submitted, setSubmitted] = useState(false);
   const [responses, setResponses] = useState([]);
   const [isCorrect, setIsCorrect] = useState(null);
+  const [showRemovalModal, setShowRemovalModal] = useState(false);
 
   // ✅ Timer states
   const [timeLeft, setTimeLeft] = useState(60);
@@ -65,6 +67,12 @@ export default function StudentPage() {
       setResponses(data);
     });
 
+    // Listen for removal notification (students only)
+    socket.on('removed-by-teacher', () => {
+      console.log('Student removed by teacher - showing modal');
+      setShowRemovalModal(true);
+    });
+
     // ✅ Request current poll when component mounts
     if (existingName) {
       socket.emit('get-current-poll');
@@ -73,6 +81,7 @@ export default function StudentPage() {
     return () => {
       socket.off('new-poll');
       socket.off('poll-results');
+      socket.off('removed-by-teacher');
       clearInterval(timerRef.current);
     };
   }, []);
@@ -207,6 +216,10 @@ export default function StudentPage() {
           userId={name}
         />
       )}
+      <RemovalModal
+        isOpen={showRemovalModal}
+        onClose={() => setShowRemovalModal(false)}
+      />
     </div>
   );
 }

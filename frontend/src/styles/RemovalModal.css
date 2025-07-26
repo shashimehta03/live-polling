@@ -1,0 +1,134 @@
+.removal-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.removal-modal {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.9);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.removal-modal-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.removal-icon {
+    font-size: 4rem;
+    margin-bottom: 0.5rem;
+}
+
+.removal-modal h2 {
+    margin: 0;
+    color: #dc3545;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.removal-modal p {
+    margin: 0;
+    color: #6c757d;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.countdown-timer {
+    margin: 1rem 0;
+    font-size: 1rem;
+    color: #495057;
+    font-weight: 500;
+}
+
+.countdown-number {
+    color: #dc3545;
+    font-weight: 700;
+    font-size: 1.2rem;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.removal-ok-btn {
+    margin-top: 1rem;
+    padding: 0.75rem 2rem;
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.removal-ok-btn:hover {
+    background: #c82333;
+    transform: translateY(-2px);
+}
+
+/* Responsive design */
+@media (max-width: 480px) {
+    .removal-modal {
+        padding: 1.5rem;
+        margin: 1rem;
+    }
+
+    .removal-icon {
+        font-size: 3rem;
+    }
+
+    .removal-modal h2 {
+        font-size: 1.3rem;
+    }
+}
