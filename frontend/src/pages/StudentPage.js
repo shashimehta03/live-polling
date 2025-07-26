@@ -24,7 +24,7 @@ export default function StudentPage() {
     if (existingName) {
       setName(existingName);
       setStored(true);
-      socket.emit('register-student');
+      socket.emit('register-student', existingName);
     }
 
     // ✅ Listen for new poll
@@ -100,7 +100,7 @@ export default function StudentPage() {
     if (name) {
       sessionStorage.setItem('studentName', name);
       setStored(true);
-      socket.emit('register-student');
+      socket.emit('register-student', name);
     }
   };
 

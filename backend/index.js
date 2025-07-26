@@ -26,8 +26,11 @@ io.on('connection', (socket) => {
 
   // Send current poll to new student
   socket.on('register-student', (name) => {
-    connectedStudents.set(socket.id, name);
-    allStudents.set(socket.id, { name, isConnected: true });
+    console.log(`Student registered: ${name} (${socket.id})`);
+    // Ensure name is a non-empty string
+    const studentName = (typeof name === 'string' && name.trim().length > 0) ? name.trim() : `Student-${socket.id.substring(0, 5)}`;
+    connectedStudents.set(socket.id, studentName);
+    allStudents.set(socket.id, { name: studentName, isConnected: true });
     updateStudentCount();
     updateParticipants();
     if (currentPoll) {

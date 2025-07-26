@@ -143,7 +143,7 @@ export default function ChatWidget({ userType, userName, userId }) {
                                 <span className="participant-icon">
                                     {participant.type === 'teacher' ? '👨‍🏫' : '👨‍🎓'}
                                 </span>
-                                <span className="participant-name">{participant.name}</span>
+                                <span className="participant-name">{(typeof participant.name === 'string' && participant.name.trim().length > 0) ? participant.name : 'Unnamed Student'}</span>
                                 <span className="participant-type">
                                     {participant.type === 'teacher' ? 'Teacher' : 'Student'}
                                 </span>
