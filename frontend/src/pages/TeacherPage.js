@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { socket } from '../socket';
+import { Chart } from 'chart.js/auto';
 import '../styles/TeacherPage.css';
 
 export default function TeacherPage() {
@@ -15,10 +16,12 @@ export default function TeacherPage() {
 
   const maxOptions = 5;
 
+  const chartRef = useRef(null);
+  const chartInstanceRef = useRef(null);
+
   useEffect(() => {
     socket.on('poll-results', (data) => {
       setResponses(data);
-      // Check if all students have answered
       if (data.length >= totalStudents && totalStudents > 0) {
         setPollCompleted(true);
         clearTimer();
@@ -37,7 +40,6 @@ export default function TeacherPage() {
       setTotalStudents(count);
     });
 
-    // Request student count when component mounts
     socket.emit('get-student-count');
 
     return () => {
@@ -57,6 +59,71 @@ export default function TeacherPage() {
     }
     return () => clearTimeout(timer);
   }, [timeLeft, isTimerRunning]);
+
+  useEffect(() => {
+    if (poll && chartRef.current) {
+      const summary = getSummary();
+      const labels = Object.keys(summary);
+      const data = Object.values(summary);
+
+      if (chartInstanceRef.current) {
+        chartInstanceRef.current.destroy();
+      }
+
+      chartInstanceRef.current = new Chart(chartRef.current, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Votes',
+            data: data,
+            backgroundColor: [
+              'rgba(75, 192, 192, 0.6)',
+              'rgba(255, 99, 132, 0.6)',
+              'rgba(54, 162, 235, 0.6)',
+              'rgba(255, 206, 86, 0.6)',
+              'rgba(153, 102, 255, 0.6)',
+            ],
+            borderColor: [
+              'rgba(75, 192, 192, 1)',
+              'rgba(255, 99, 132, 1)',
+              'rgba(54, 162, 235, 1)',
+              'rgba(255, 206, 86, 1)',
+              'rgba(153, 102, 255, 1)',
+            ],
+            borderWidth: 1,
+          }],
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            title: {
+              display: true,
+              text: 'Live Poll Results',
+              font: { size: 16 },
+            },
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: { display: true, text: 'Number of Votes' },
+              ticks: { stepSize: 1 },
+            },
+            x: {
+              title: { display: true, text: 'Options' },
+            },
+          },
+        },
+      });
+    }
+
+    return () => {
+      if (chartInstanceRef.current) {
+        chartInstanceRef.current.destroy();
+      }
+    };
+  }, [poll, responses]);
 
   const clearTimer = () => {
     setIsTimerRunning(false);
@@ -164,11 +231,10 @@ export default function TeacherPage() {
           <h3 className="teacher-current-poll-title">📢 Current Poll: {poll.question}</h3>
           <p>Time left: {timeLeft} seconds</p>
           <p>Students answered: {responses.length}/{totalStudents}</p>
-          <ul className="teacher-summary-list">
-            {Object.entries(getSummary()).map(([opt, count]) => (
-              <li key={opt}>{opt}: {count}</li>
-            ))}
-          </ul>
+          <div className="teacher-bar-chart-section">
+            <h4>Live Poll Bar Chart</h4>
+            <canvas ref={chartRef} style={{ maxHeight: '300px', maxWidth: '100%' }} />
+          </div>
 
           {pollCompleted && (
             <div className="teacher-new-poll-btn-section">
@@ -204,21 +270,6 @@ export default function TeacherPage() {
                   ))}
                 </tbody>
               </table>
-              {/* Bar chart */}
-              <div className="teacher-bar-chart-section">
-                <h4>Live Poll Bar Chart</h4>
-                {Object.entries(getSummary()).map(([option, count]) => {
-                  const maxVotes = Math.max(...Object.values(getSummary()), 1);
-                  const widthPercent = (count / maxVotes) * 100;
-
-                  return (
-                    <div key={option} className="teacher-bar-chart-row">
-                      <strong>{option} - {count}</strong>
-                      <div className="teacher-bar-chart-bar" style={{ width: `${widthPercent}%` }} />
-                    </div>
-                  );
-                })}
-              </div>
             </div>
           )}
         </div>
