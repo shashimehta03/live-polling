@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { socket } from '../socket';
 import '../styles/StudentPage.css';
 
@@ -11,6 +11,11 @@ export default function StudentPage() {
   const [responses, setResponses] = useState([]);
   const [isCorrect, setIsCorrect] = useState(null);
 
+  // ✅ Timer states
+  const [timeLeft, setTimeLeft] = useState(60);
+  const [timeout, setTimeoutState] = useState(false);
+  const timerRef = useRef(null);
+
   useEffect(() => {
     const existingName = sessionStorage.getItem('studentName');
     if (existingName) {
@@ -19,12 +24,28 @@ export default function StudentPage() {
       socket.emit('register-student');
     }
 
+    // ✅ Listen for new poll
     socket.on('new-poll', (pollData) => {
       console.log('Received poll:', pollData);
       setPoll(pollData);
       setSelected('');
       setResponses([]);
       setIsCorrect(null);
+      setTimeoutState(false);
+      setTimeLeft(60); // Reset timer to 60 seconds
+      clearInterval(timerRef.current);
+
+      // Start countdown
+      timerRef.current = setInterval(() => {
+        setTimeLeft(prev => {
+          if (prev <= 1) {
+            clearInterval(timerRef.current);
+            setTimeoutState(true);
+            setSubmitted(true); // stop answering when timeout
+          }
+          return prev - 1;
+        });
+      }, 1000);
 
       const alreadyAnswered = sessionStorage.getItem(`answered-${pollData.question}`);
       if (alreadyAnswered === 'true') {
@@ -32,21 +53,26 @@ export default function StudentPage() {
 
         // ✅ Request current results again
         socket.emit('get-latest-results');
+        clearInterval(timerRef.current);
       } else {
         setSubmitted(false);
       }
     });
 
+    // ✅ Listen for live poll results
     socket.on('poll-results', (data) => {
       setResponses(data);
     });
 
-    // ✅ Request current poll (in case socket missed initial event on reconnect)
-    socket.emit('get-current-poll');
+    // ✅ Request current poll when component mounts
+    if (existingName) {
+      socket.emit('get-current-poll');
+    }
 
     return () => {
       socket.off('new-poll');
       socket.off('poll-results');
+      clearInterval(timerRef.current);
     };
   }, []);
 
@@ -55,8 +81,9 @@ export default function StudentPage() {
     const correct = poll.correctAnswer === selected;
     setIsCorrect(correct);
     socket.emit('submit-answer', { name, answer: selected });
-    sessionStorage.setItem(`answered-${poll.question}`, 'true'); // ✅ Save answer
+    sessionStorage.setItem(`answered-${poll.question}`, 'true');
     setSubmitted(true);
+    clearInterval(timerRef.current);
   };
 
   const handleNameSubmit = () => {
@@ -121,11 +148,16 @@ export default function StudentPage() {
         </div>
       ) : (
         <div className="student-poll-section">
-          <h3>Welcome, {name} <span role="img" aria-label="wave">👋</span></h3>
+          <h3>Welcome, {name} 👋</h3>
           {poll ? (
-            !submitted ? (
+            timeout ? (
+              <div className="timeout-message">
+                ⏳ <strong>Oops! Timeout.</strong> Wait for the next question.
+              </div>
+            ) : !submitted ? (
               <div className="student-poll-form">
                 <h4>{poll.question}</h4>
+                <p>⏱ Time Left: <strong>{timeLeft}s</strong></p>
                 {poll.options.map((opt, idx) => (
                   <div key={idx} className="student-option-row">
                     <input
@@ -144,16 +176,18 @@ export default function StudentPage() {
             ) : (
               <div className="student-submitted-section">
                 <div className={`student-feedback ${isCorrect ? 'correct' : 'incorrect'}`}>
-                  {isCorrect ? (
-                    <>
-                      <span className="feedback-icon">✅</span>
-                      <p>Correct! Well done!</p>
-                    </>
-                  ) : (
-                    <>
-                      <span className="feedback-icon">❌</span>
-                      <p>Incorrect. The correct answer was: <strong>{poll.correctAnswer}</strong></p>
-                    </>
+                  {isCorrect !== null && (
+                    isCorrect ? (
+                      <>
+                        <span className="feedback-icon">✅</span>
+                        <p>Correct! Well done!</p>
+                      </>
+                    ) : (
+                      <>
+                        <span className="feedback-icon">❌</span>
+                        <p>Incorrect. The correct answer was: <strong>{poll.correctAnswer}</strong></p>
+                      </>
+                    )
                   )}
                 </div>
                 {renderBarChart()}
