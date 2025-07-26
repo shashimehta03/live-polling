@@ -6,12 +6,40 @@
     background: linear-gradient(135deg, #f8fafc 0%, #fef9c3 100%);
 }
 
+.teacher-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 1200px;
+    padding: 2rem 2rem 0 5rem;
+    margin-bottom: 1rem;
+}
+
 .teacher-title {
     font-size: 2.3rem;
-    margin-top: 2.5rem;
     color: #b45309;
     font-weight: 700;
     letter-spacing: 1px;
+    margin: 0;
+}
+
+.teacher-history-btn {
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+    border: none;
+    border-radius: 8px;
+    background: #fbbf24;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+    box-shadow: 0 2px 8px rgba(251, 191, 36, 0.3);
+}
+
+.teacher-history-btn:hover {
+    background: #b45309;
+    transform: translateY(-2px) scale(1.05);
 }
 
 .teacher-create-form,

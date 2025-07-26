@@ -99,3 +99,15 @@
     margin: 0;
     font-size: 1.1rem;
 }
+
+.timeout-message {
+    background: #fef3c7;
+    color: #92400e;
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 2px solid #f59e0b;
+    text-align: center;
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin: 1rem 0;
+}

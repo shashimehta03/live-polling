@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { socket } from '../socket';
 import { Chart } from 'chart.js/auto';
+import HistoryModal from '../components/HistoryModal';
 import '../styles/TeacherPage.css';
 
 export default function TeacherPage() {
@@ -14,6 +15,8 @@ export default function TeacherPage() {
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [totalStudents, setTotalStudents] = useState(0);
   const [pollCompleted, setPollCompleted] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [pollHistory, setPollHistory] = useState([]);
 
   const maxOptions = 5;
 
@@ -41,12 +44,17 @@ export default function TeacherPage() {
       setTotalStudents(count);
     });
 
+    socket.on('poll-history', (history) => {
+      setPollHistory(history);
+    });
+
     socket.emit('get-student-count');
 
     return () => {
       socket.off('poll-results');
       socket.off('new-poll');
       socket.off('student-count');
+      socket.off('poll-history');
     };
   }, [totalStudents]);
 
@@ -199,9 +207,19 @@ export default function TeacherPage() {
     return { correct, incorrect };
   };
 
+  const handleHistoryClick = () => {
+    socket.emit('get-poll-history');
+    setShowHistory(true);
+  };
+
   return (
     <div className="teacher-container">
-      <h2 className="teacher-title">Teacher Panel</h2>
+      <div className="teacher-header">
+        <h2 className="teacher-title">Teacher Panel</h2>
+        <button className="teacher-history-btn" onClick={handleHistoryClick}>
+          📊 History
+        </button>
+      </div>
 
       {!poll ? (
         <div className="teacher-create-form">
@@ -263,6 +281,10 @@ export default function TeacherPage() {
           <div className="teacher-answer-stats">
             <h4>Answer Statistics</h4>
             <div className="teacher-stats-grid">
+              <div className="teacher-stat-item">
+                <span className="teacher-stat-label">Total Students:</span>
+                <span className="teacher-stat-value">{totalStudents}</span>
+              </div>
               <div className="teacher-stat-item correct">
                 <span className="teacher-stat-label">Correct Answers:</span>
                 <span className="teacher-stat-value">{getAnswerStats().correct}</span>
@@ -270,6 +292,12 @@ export default function TeacherPage() {
               <div className="teacher-stat-item incorrect">
                 <span className="teacher-stat-label">Incorrect Answers:</span>
                 <span className="teacher-stat-value">{getAnswerStats().incorrect}</span>
+              </div>
+              <div className="teacher-stat-item">
+                <span className="teacher-stat-label">Success Rate:</span>
+                <span className="teacher-stat-value">
+                  {totalStudents > 0 ? Math.round((getAnswerStats().correct / totalStudents) * 100) : 0}%
+                </span>
               </div>
             </div>
           </div>
@@ -316,6 +344,12 @@ export default function TeacherPage() {
           )}
         </div>
       )}
+
+      <HistoryModal
+        isOpen={showHistory}
+        onClose={() => setShowHistory(false)}
+        pollHistory={pollHistory}
+      />
     </div>
   );
 }

@@ -16,6 +16,7 @@ const io = new Server(server, {
 let currentPoll = null;
 let answers = [];
 let connectedStudents = new Map(); // Using Map to store socket.id -> student name
+let pollHistory = []; // Array to store previous polls with their results
 
 io.on('connection', (socket) => {
   console.log('New client connected:', socket.id);
@@ -39,6 +40,19 @@ io.on('connection', (socket) => {
 
   // Teacher creates poll
   socket.on('create-poll', (pollData) => {
+    // If there's a current poll, save it to history first
+    if (currentPoll && answers.length > 0) {
+      const historyEntry = {
+        ...currentPoll,
+        answers: [...answers],
+        timestamp: new Date().toISOString(),
+        totalStudents: connectedStudents.size,
+        correctAnswers: answers.filter(a => a.isCorrect).length,
+        incorrectAnswers: answers.filter(a => !a.isCorrect).length
+      };
+      pollHistory.push(historyEntry);
+    }
+
     currentPoll = pollData;
     console.log('Poll created:', currentPoll);
     answers = [];
@@ -49,6 +63,11 @@ io.on('connection', (socket) => {
   // Teacher requests student count
   socket.on('get-student-count', () => {
     updateStudentCount();
+  });
+
+  // Teacher requests poll history
+  socket.on('get-poll-history', () => {
+    socket.emit('poll-history', pollHistory);
   });
 
   // Student submits answer
