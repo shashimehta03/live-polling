@@ -16,6 +16,7 @@ const io = new Server(server, {
 let currentPoll = null;
 let answers = [];
 let connectedStudents = new Map(); // Using Map to store socket.id -> student name
+let allStudents = new Map(); // Track all students who have ever joined (socketId -> {name, isConnected})
 let pollHistory = []; // Array to store previous polls with their results
 let chatMessages = []; // Array to store chat messages
 let connectedTeachers = new Set(); // Set to track connected teachers
@@ -26,7 +27,9 @@ io.on('connection', (socket) => {
   // Send current poll to new student
   socket.on('register-student', (name) => {
     connectedStudents.set(socket.id, name);
+    allStudents.set(socket.id, { name, isConnected: true });
     updateStudentCount();
+    updateParticipants();
     if (currentPoll) {
       socket.emit('new-poll', currentPoll);
     }
@@ -39,6 +42,8 @@ io.on('connection', (socket) => {
     connectedTeachers.add(socket.id);
     // Send chat history to new teacher
     socket.emit('chat-history', chatMessages);
+    // Send participants list to teacher
+    updateParticipants();
   });
 
   // Send current poll + results if available on teacher refresh
@@ -98,6 +103,37 @@ io.on('connection', (socket) => {
     io.emit('new-message', message);
   });
 
+  // Remove student (teacher only)
+  socket.on('remove-student', (studentSocketId) => {
+    if (connectedTeachers.has(socket.id)) {
+      const studentData = allStudents.get(studentSocketId);
+      if (studentData) {
+        // Remove student's answers from current poll
+        answers = answers.filter(answer => answer.name !== studentData.name);
+
+        // Mark student as disconnected
+        allStudents.set(studentSocketId, { ...studentData, isConnected: false });
+
+        // Remove from connected students if currently connected
+        if (connectedStudents.has(studentSocketId)) {
+          connectedStudents.delete(studentSocketId);
+        }
+
+        // Disconnect the student if currently connected
+        if (studentData.isConnected) {
+          io.to(studentSocketId).emit('removed-by-teacher');
+        }
+
+        // Update counts and participants
+        updateStudentCount();
+        updateParticipants();
+
+        // Update poll results
+        io.emit('poll-results', answers);
+      }
+    }
+  });
+
   // Student submits answer
   socket.on('submit-answer', ({ name, answer }) => {
     if (!currentPoll) return;
@@ -130,14 +166,49 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id);
+
+    // Mark student as disconnected but keep in allStudents
+    if (allStudents.has(socket.id)) {
+      const studentData = allStudents.get(socket.id);
+      allStudents.set(socket.id, { ...studentData, isConnected: false });
+    }
+
     connectedStudents.delete(socket.id);
     connectedTeachers.delete(socket.id);
     updateStudentCount();
+    updateParticipants();
   });
 
   // Helper function to update student count
   function updateStudentCount() {
     io.emit('student-count', connectedStudents.size);
+  }
+
+  // Helper function to update participants list
+  function updateParticipants() {
+    const participants = [];
+
+    // Add all students (connected and disconnected)
+    allStudents.forEach((studentData, socketId) => {
+      participants.push({
+        socketId,
+        name: studentData.name,
+        type: 'student',
+        isConnected: studentData.isConnected
+      });
+    });
+
+    // Add teachers
+    connectedTeachers.forEach(teacherSocketId => {
+      participants.push({
+        socketId: teacherSocketId,
+        name: 'Teacher',
+        type: 'teacher',
+        isConnected: true
+      });
+    });
+
+    io.emit('participants-update', participants);
   }
 });
 

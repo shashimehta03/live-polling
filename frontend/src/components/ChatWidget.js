@@ -4,8 +4,10 @@ import '../styles/ChatWidget.css';
 
 export default function ChatWidget({ userType, userName, userId }) {
     const [isOpen, setIsOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState('chat'); // 'chat' or 'participants'
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
+    const [participants, setParticipants] = useState([]);
     const messagesEndRef = useRef(null);
 
     const scrollToBottom = () => {
@@ -28,9 +30,22 @@ export default function ChatWidget({ userType, userName, userId }) {
             setMessages(prev => [...prev, message]);
         });
 
+        // Listen for participants updates
+        socket.on('participants-update', (participantsList) => {
+            setParticipants(participantsList);
+        });
+
+        // Listen for removal notification (students only)
+        socket.on('removed-by-teacher', () => {
+            alert('You have been removed from the session by the teacher.');
+            window.location.href = '/';
+        });
+
         return () => {
             socket.off('chat-history');
             socket.off('new-message');
+            socket.off('participants-update');
+            socket.off('removed-by-teacher');
         };
     }, [userType]);
 
@@ -53,12 +68,107 @@ export default function ChatWidget({ userType, userName, userId }) {
         setNewMessage('');
     };
 
+    const handleRemoveStudent = (studentSocketId, studentName) => {
+        if (window.confirm(`Are you sure you want to remove ${studentName} from the session?`)) {
+            socket.emit('remove-student', studentSocketId);
+        }
+    };
+
     const formatTime = (timestamp) => {
         return new Date(timestamp).toLocaleTimeString([], {
             hour: '2-digit',
             minute: '2-digit'
         });
     };
+
+    const renderChatTab = () => (
+        <>
+            <div className="chat-messages">
+                {messages.length === 0 ? (
+                    <div className="chat-empty">
+                        <p>No messages yet. Start the conversation!</p>
+                    </div>
+                ) : (
+                    messages.map((msg) => (
+                        <div
+                            key={msg.id}
+                            className={`chat-message ${msg.senderType === userType ? 'own-message' : 'other-message'}`}
+                        >
+                            <div className="message-header">
+                                <span className="message-sender">
+                                    {msg.senderType === 'teacher' ? '👨‍🏫' : '👨‍🎓'} {msg.senderName}
+                                </span>
+                                <span className="message-time">{formatTime(msg.timestamp)}</span>
+                            </div>
+                            <div className="message-content">{msg.message}</div>
+                        </div>
+                    ))
+                )}
+                <div ref={messagesEndRef} />
+            </div>
+
+            <form className="chat-input-form" onSubmit={handleSendMessage}>
+                <input
+                    type="text"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder="Type your message..."
+                    className="chat-input"
+                    maxLength={200}
+                />
+                <button type="submit" className="chat-send-btn" disabled={!newMessage.trim()}>
+                    ➤
+                </button>
+            </form>
+        </>
+    );
+
+    const renderParticipantsTab = () => (
+        <div className="participants-container">
+            <div className="participants-header">
+                <h4>Participants ({participants.length})</h4>
+                <div className="participants-stats">
+                    <span className="connected-count">
+                        Connected: {participants.filter(p => p.isConnected).length}
+                    </span>
+                </div>
+            </div>
+            <div className="participants-list">
+                {participants.length === 0 ? (
+                    <div className="participants-empty">
+                        <p>No participants yet.</p>
+                    </div>
+                ) : (
+                    participants.map((participant) => (
+                        <div key={participant.socketId} className={`participant-item ${!participant.isConnected ? 'disconnected' : ''}`}>
+                            <div className="participant-info">
+                                <span className="participant-icon">
+                                    {participant.type === 'teacher' ? '👨‍🏫' : '👨‍🎓'}
+                                </span>
+                                <span className="participant-name">{participant.name}</span>
+                                <span className="participant-type">
+                                    {participant.type === 'teacher' ? 'Teacher' : 'Student'}
+                                </span>
+                                <span className={`connection-status ${participant.isConnected ? 'connected' : 'disconnected'}`}>
+                                    {participant.isConnected ? '🟢 Online' : '🔴 Offline'}
+                                </span>
+                            </div>
+                            {userType === 'teacher' && participant.type === 'student' && (
+                                <button
+                                    className="remove-student-btn"
+                                    onClick={() => handleRemoveStudent(participant.socketId, participant.name)}
+                                    title={`Remove ${participant.name}`}
+                                    disabled={!participant.isConnected}
+                                >
+                                    🗑️
+                                </button>
+                            )}
+                        </div>
+                    ))
+                )}
+            </div>
+        </div>
+    );
 
     return (
         <div className="chat-widget">
@@ -80,43 +190,24 @@ export default function ChatWidget({ userType, userName, userId }) {
                         </span>
                     </div>
 
-                    <div className="chat-messages">
-                        {messages.length === 0 ? (
-                            <div className="chat-empty">
-                                <p>No messages yet. Start the conversation!</p>
-                            </div>
-                        ) : (
-                            messages.map((msg) => (
-                                <div
-                                    key={msg.id}
-                                    className={`chat-message ${msg.senderType === userType ? 'own-message' : 'other-message'}`}
-                                >
-                                    <div className="message-header">
-                                        <span className="message-sender">
-                                            {msg.senderType === 'teacher' ? '👨‍🏫' : '👨‍🎓'} {msg.senderName}
-                                        </span>
-                                        <span className="message-time">{formatTime(msg.timestamp)}</span>
-                                    </div>
-                                    <div className="message-content">{msg.message}</div>
-                                </div>
-                            ))
-                        )}
-                        <div ref={messagesEndRef} />
+                    {/* Tab Navigation */}
+                    <div className="chat-tabs">
+                        <button
+                            className={`chat-tab ${activeTab === 'chat' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('chat')}
+                        >
+                            💬 Chat
+                        </button>
+                        <button
+                            className={`chat-tab ${activeTab === 'participants' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('participants')}
+                        >
+                            👥 Participants
+                        </button>
                     </div>
 
-                    <form className="chat-input-form" onSubmit={handleSendMessage}>
-                        <input
-                            type="text"
-                            value={newMessage}
-                            onChange={(e) => setNewMessage(e.target.value)}
-                            placeholder="Type your message..."
-                            className="chat-input"
-                            maxLength={200}
-                        />
-                        <button type="submit" className="chat-send-btn" disabled={!newMessage.trim()}>
-                            ➤
-                        </button>
-                    </form>
+                    {/* Tab Content */}
+                    {activeTab === 'chat' ? renderChatTab() : renderParticipantsTab()}
                 </div>
             )}
         </div>
