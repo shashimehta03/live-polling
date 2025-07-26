@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { socket } from '../socket';
 import { Chart } from 'chart.js/auto';
 import HistoryModal from '../components/HistoryModal';
+import ChatWidget from '../components/ChatWidget';
 import '../styles/TeacherPage.css';
 
 export default function TeacherPage() {
@@ -349,6 +350,12 @@ export default function TeacherPage() {
         isOpen={showHistory}
         onClose={() => setShowHistory(false)}
         pollHistory={pollHistory}
+      />
+
+      <ChatWidget
+        userType="teacher"
+        userName="Teacher"
+        userId="teacher"
       />
     </div>
   );

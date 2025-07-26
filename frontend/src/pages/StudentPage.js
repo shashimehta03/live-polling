@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { socket } from '../socket';
+import ChatWidget from '../components/ChatWidget';
 import '../styles/StudentPage.css';
 
 export default function StudentPage() {
@@ -197,6 +198,14 @@ export default function StudentPage() {
             <p>No active poll yet.</p>
           )}
         </div>
+      )}
+
+      {stored && (
+        <ChatWidget
+          userType="student"
+          userName={name}
+          userId={name}
+        />
       )}
     </div>
   );

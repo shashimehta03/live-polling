@@ -17,6 +17,8 @@ let currentPoll = null;
 let answers = [];
 let connectedStudents = new Map(); // Using Map to store socket.id -> student name
 let pollHistory = []; // Array to store previous polls with their results
+let chatMessages = []; // Array to store chat messages
+let connectedTeachers = new Set(); // Set to track connected teachers
 
 io.on('connection', (socket) => {
   console.log('New client connected:', socket.id);
@@ -28,6 +30,15 @@ io.on('connection', (socket) => {
     if (currentPoll) {
       socket.emit('new-poll', currentPoll);
     }
+    // Send chat history to new student
+    socket.emit('chat-history', chatMessages);
+  });
+
+  // Register teacher
+  socket.on('register-teacher', () => {
+    connectedTeachers.add(socket.id);
+    // Send chat history to new teacher
+    socket.emit('chat-history', chatMessages);
   });
 
   // Send current poll + results if available on teacher refresh
@@ -70,6 +81,23 @@ io.on('connection', (socket) => {
     socket.emit('poll-history', pollHistory);
   });
 
+  // Handle chat messages
+  socket.on('send-message', (messageData) => {
+    const message = {
+      id: Date.now(),
+      sender: messageData.sender,
+      senderName: messageData.senderName,
+      message: messageData.message,
+      timestamp: new Date().toISOString(),
+      senderType: messageData.senderType // 'student' or 'teacher'
+    };
+
+    chatMessages.push(message);
+
+    // Broadcast message to all connected clients
+    io.emit('new-message', message);
+  });
+
   // Student submits answer
   socket.on('submit-answer', ({ name, answer }) => {
     if (!currentPoll) return;
@@ -103,6 +131,7 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id);
     connectedStudents.delete(socket.id);
+    connectedTeachers.delete(socket.id);
     updateStudentCount();
   });
 
